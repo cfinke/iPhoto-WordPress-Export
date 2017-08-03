@@ -223,6 +223,10 @@ function upload_photo( $event, $photo, $post_id ) {
 	$title = trim( $event->getName() );
 	$caption = trim( $photo->getCaption() );
 	
+	if ( preg_match( '/^[a-z]+_[0-9]+$/i', $caption ) ) {
+		$caption = '';
+	}
+
 	if ( $caption && $caption != $title ) {
 		$title .= ' - ' . $caption;
 	}
@@ -284,7 +288,7 @@ function upload_photo( $event, $photo, $post_id ) {
 
 	$photo_id = $json_response->id;
 	
-	return update_photo( $photo_id, array( 'title' => $title, 'post' => $post_id, 'date' => $photo_timestamp, ) );
+	return update_photo( $photo_id, array( 'title' => $title, 'description' => $photo->getDescription(), 'post' => $post_id, 'date' => $photo_timestamp, ) );
 }
 
 /**
