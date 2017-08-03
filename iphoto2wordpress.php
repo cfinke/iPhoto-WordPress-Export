@@ -133,15 +133,6 @@ foreach ( $all_events as $event_counter => $event ) {
 		die;
 	}
 	
-	// Keep track of which photos should be in this post.  We could just
-	// set the post content to [gallery], but we want to control the order.
-	if ( ! isset( $state['photo_ids_for_post'][$post->id] ) ) {
-		$state['photo_ids_for_post'][$post->id] = array();
-	}
-	
-	// Remove duplicate photo IDs, which could happen on script re-runs.
-	$state['photo_ids_for_post'][$post->id] = array_unique( $state['photo_ids_for_post'][$post->id] );
-
 	foreach ( $photos as $photo ) {
 		// Either upload the photo or get it from the cached state.
 		$photo_json = get_or_create_attachment_from_photo( $event, $photo, $post->id );
@@ -194,19 +185,7 @@ foreach ( $all_events as $event_counter => $event ) {
 			update_photo_attachment( $photo, array( 'tags' => $tags_to_add ) );
 		}
 		
-		if ( ! in_array( $photo_json->id, $state['photo_ids_for_post'][$post->id] ) ) {
-			$state['photo_ids_for_post'][$post->id][] = $photo_json->id;
-		}
-		
 		save_state();
-	}
-	
-	// Update the post gallery with the explicitly-ordered photos.
-	$post_content = '[gallery ids="' . join( ",", $state['photo_ids_for_post'][$post->id] ) . '"]';
-	
-	if ( $post->content->raw != $post_content ) {
-		echo "Post content is '" . $post->content->raw . "', updating to '" . $post_content . "'.\n";
-		update_event_post( $event, array( 'content' => $post_content ) );
 	}
 }
 
