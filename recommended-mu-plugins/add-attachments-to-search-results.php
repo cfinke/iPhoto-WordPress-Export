@@ -1,7 +1,7 @@
 <?php
 
 function add_attachments_to_search_results_and_categories( $query ) {
-	if ( ! $query->is_search && ! $query->is_category ) {
+	if ( ! $query->is_search && ! $query->is_category && ! $query->is_tag ) {
 		return;
 	}
 
