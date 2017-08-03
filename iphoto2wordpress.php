@@ -173,7 +173,7 @@ foreach ( $all_events as $event_counter => $event ) {
 				if ( ! isset( $existing_tags[ $tag_name ] ) ) {
 					$tag_id = create_tag( $tag_name );
 					
-					$existing_tags[ $tag_id ] = $tag_name;
+					$existing_tags[ $tag_name ] = $tag_id;
 					
 					$tags_to_add[] = $tag_id;
 				}
@@ -186,7 +186,12 @@ foreach ( $all_events as $event_counter => $event ) {
 			
 			echo "...\n";
 			
-			update_photo_attachment( $photo, array( 'tags' => $tags_to_add ) );
+			sort( $tags_to_add );
+			sort( $photo_json->tags );
+			
+			if ( $tags_to_add != $photo_json->tags ) {
+				update_photo_attachment( $photo, array( 'tags' => $tags_to_add ) );
+			}
 		}
 		
 		save_state();
