@@ -258,7 +258,7 @@ function upload_photo( $event, $photo, $post_id ) {
 	$title = trim( $event->getName() );
 	$caption = trim( $photo->getCaption() );
 	
-	if ( preg_match( '/^[a-z]+_[0-9]+$/i', $caption ) ) {
+	if ( preg_match( '/^([a-z]+_[0-9]+|Scan.*)$/i', $caption ) ) {
 		$caption = '';
 	}
 
