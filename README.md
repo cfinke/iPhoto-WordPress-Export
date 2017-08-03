@@ -10,10 +10,11 @@ Run it like this:
 
 `$ ./iphoto2wordpress.php --library=/path/to/photo/library --wordpress=https://www.example.com/`
 
-The script will upload all photos in the library to the given WordPress site and for each event, it will create a post containing a gallery of the photos in the event. It will also convert any regular albums into categories, categorizing the photos themselves. (For this, you will want to enable categories for attachments.)
- https://code.tutsplus.com/articles/applying-categories-tags-and-custom-taxonomies-to-media-attachments--wp-32319
+The script will upload all photos in the library to the given WordPress site and for each event, it will create a post containing a gallery of the photos in the event.
 
-I've noticed that the iPhoto Library you're exporting must be the last one you opened in iPhoto (if you have multiple libraries); I think this is a bug in one of the libraries this software uses, but I haven't taken the time to figure that out.
+It converts any regular albums into categories, categorizing the photos themselves. (For this, you will want to enable categories for attachments using `add-categories-to-attachments.php` in `recommended-mu-plugins/`.)
+
+It treats Faces as tags, tagging the photos with the names of the pictured people. (For this, you will want to enable tags for attachments using `add-tags-to-attachments.php` in `recommended-mu-plugins/`.)
 
 You will need to have the Basic Authentication plugin installed on the WordPress site: https://github.com/WP-API/Basic-Auth
 

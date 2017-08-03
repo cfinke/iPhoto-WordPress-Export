@@ -8,6 +8,7 @@ require "lib/CFPropertyList/CFPropertyList.php";
 require "lib/PhotoLibrary/Album.php";
 require "lib/PhotoLibrary/Library.php";
 require "lib/PhotoLibrary/Photo.php";
+require "lib/PhotoLibrary/Face.php";
 
 /**
  * Command line options:
@@ -107,6 +108,14 @@ foreach ( $albums as $idx => $album ) {
 	}
 }
 
+// Get a list of the existing tags on the WordPress site.
+$existing_tags_json = get_tags();
+
+// Save a map of "tag name" => "tag ID"
+foreach ( $existing_tags_json as $tag ) {
+	$existing_tags[ $tag->name ] = $tag->id;
+}
+
 // For each event, create a post. Each post will contain a gallery of photos.
 foreach ( $all_events as $event_counter => $event ) {
 	echo "Processing event: " . $event->getName() . "...\n";
@@ -152,6 +161,37 @@ foreach ( $all_events as $event_counter => $event ) {
 				echo "Adding categories to photo\n";
 				update_photo_attachment( $photo, array( 'categories' => $photo_categories[ $photo->getKey() ] ) );
 			}
+		}
+		
+		save_state();
+		
+		$faces = $photo->getFaces();
+		
+		if ( ! empty( $faces ) ) {
+			echo "Tagging photo with: ";
+
+			$tags_to_add = array();
+			
+			foreach ( $faces as $face ) {
+				$tag_name = $face->getName();
+				
+				if ( ! isset( $existing_tags[ $tag_name ] ) ) {
+					$tag_id = create_tag( $tag_name );
+					
+					$existing_tags[ $tag_id ] = $tag_name;
+					
+					$tags_to_add[] = $tag_id;
+				}
+				else {
+					$tags_to_add[] = $existing_tags[ $tag_name ];
+				}
+				
+				echo $tag_name . ", ";
+			}
+			
+			echo "...\n";
+			
+			update_photo_attachment( $photo, array( 'tags' => $tags_to_add ) );
 		}
 		
 		if ( ! in_array( $photo_json->id, $state['photo_ids_for_post'][$post->id] ) ) {
@@ -317,7 +357,33 @@ function get_categories() {
 	
 	$categories = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/categories" );
 	
-	return json_decode( $categories );
+	$categories_json = json_decode( $categories );
+	
+	if ( null === $categories_json ) {
+		echo "Could not retrieve categories.\n";
+		die;
+	}
+	
+	return $categories_json;
+}
+
+/**
+ * Get the list of tags for the site.
+ */
+function get_tags() {
+	global $cli_options;
+	
+	$tags = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/tags" );
+	
+	$tags_json = json_decode( $tags );
+	
+	if ( null === $tags_json ) {
+		echo "Could not retrieve tags.\n";
+		die;
+	}
+	
+	return $tags_json;
+
 }
 
 /**
@@ -327,6 +393,17 @@ function create_category( $name ) {
 	$data = json_encode( array( 'name' => $name ) );
 
 	$response = post_to_wordpress_api( "categories", $data );
+	
+	return $response->id;
+}
+
+/**
+ * Create a tag on the WordPress site.
+ */
+function create_tag( $name ) {
+	$data = json_encode( array( 'name' => $name ) );
+
+	$response = post_to_wordpress_api( "tags", $data );
 	
 	return $response->id;
 }
