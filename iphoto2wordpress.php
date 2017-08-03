@@ -171,7 +171,11 @@ foreach ( $all_events as $event_counter => $event ) {
 				$tag_name = $face->getName();
 				
 				if ( ! isset( $existing_tags[ $tag_name ] ) ) {
+					echo "Creating tag: " . $tag_name . "...\n";
+					
 					$tag_id = create_tag( $tag_name );
+					
+					echo "Tag ID: " . $tag_id . "\n";
 					
 					$existing_tags[ $tag_name ] = $tag_id;
 					
@@ -191,6 +195,9 @@ foreach ( $all_events as $event_counter => $event ) {
 			
 			if ( $tags_to_add != $photo_json->tags ) {
 				update_photo_attachment( $photo, array( 'tags' => $tags_to_add ) );
+			}
+			else {
+				echo "Photo already tagged.\n";
 			}
 		}
 		
@@ -343,16 +350,27 @@ function update_post( $post_id, $fields ) {
 function get_categories() {
 	global $cli_options;
 	
-	$categories = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/categories" );
+	$combined_categories_json = array();
 	
-	$categories_json = json_decode( $categories );
+	$page = 1;
+	$per_page = 25;
 	
-	if ( null === $categories_json ) {
-		echo "Could not retrieve categories.\n";
-		die;
-	}
+	do {
+		$categories = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/categories?per_page=" . $per_page . "&page=" . $page );
 	
-	return $categories_json;
+		$categories_json = json_decode( $categories );
+
+		if ( null === $categories_json ) {
+			echo "Could not retrieve categories.\n";
+			die;
+		}
+	
+		$combined_categories_json = array_merge( $combined_categories_json, $categories_json );
+		
+		$page++;
+	} while ( count( $categories_json ) == $per_page );
+	
+	return $combined_categories_json;
 }
 
 /**
@@ -361,17 +379,27 @@ function get_categories() {
 function get_tags() {
 	global $cli_options;
 	
-	$tags = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/tags" );
+	$combined_tags_json = array();
 	
-	$tags_json = json_decode( $tags );
+	$page = 1;
+	$per_page = 25;
 	
-	if ( null === $tags_json ) {
-		echo "Could not retrieve tags.\n";
-		die;
-	}
+	do {
+		$tags = file_get_contents( $cli_options["wordpress"] . "wp-json/wp/v2/tags?per_page=" . $per_page . "&page=" . $page );
 	
-	return $tags_json;
+		$tags_json = json_decode( $tags );
 
+		if ( null === $tags_json ) {
+			echo "Could not retrieve tags.\n";
+			die;
+		}
+	
+		$combined_tags_json = array_merge( $combined_tags_json, $tags_json );
+		
+		$page++;
+	} while ( count( $tags_json ) == $per_page );
+	
+	return $combined_tags_json;
 }
 
 /**
