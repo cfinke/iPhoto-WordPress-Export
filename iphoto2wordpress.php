@@ -15,7 +15,7 @@ require "lib/PhotoLibrary/Face.php";
  * --library=/path/to/library
  * --wordpress=http://www.yoursite.com/
  */
-$cli_options = getopt( "", array( 'library::', 'wordpress::', ) );
+$cli_options = getopt( "", array( 'library::', 'wordpress::', 'status::', ) );
 
 /** If you don't want to provide username and password at the command line, you can set them here. **/
 // $cli_options['username'] = '';
@@ -29,6 +29,10 @@ if ( empty( $cli_options['library'] ) || empty( $cli_options['wordpress'] ) ) {
 if ( ! file_exists( $cli_options['library'] ) ) {
 	file_put_contents( 'php://stderr', "Error: Library does not exist (" . $cli_options['library'] . ")\n" );
 	die;
+}
+
+if ( empty( $cli_options['status'] ) ) {
+	$cli_options['status'] = 'draft';
 }
 
 // Ask for the username and password.
@@ -224,7 +228,7 @@ function create_post( $name, $date ) {
 	
 	echo "Creating post: " . $name . "...\n";
 
-	$data = json_encode( array( 'title' => $name, 'date' => date( 'Y-m-d H:i:s', strtotime( $date ) ), 'content' => '[gallery]' ) );
+	$data = json_encode( array( 'title' => $name, 'date' => date( 'Y-m-d H:i:s', strtotime( $date ) ), 'content' => '[gallery]', 'status' => $cli_options['status'] ) );
 	
 	return post_to_wordpress_api( "posts", $data );
 }
